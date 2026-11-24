@@ -1,0 +1,58 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+
+plugins { id 'com.android.application' }
+android {
+    namespace 'jp.koma.studio'
+    compileSdk 35
+    defaultConfig { applicationId 'jp.koma.studio'; minSdk 29; targetSdk 35; versionCode 100; versionName '1.0.0'; ndk { abiFilters 'arm64-v8a', 'x86_64' } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+    packaging { jniLibs { useLegacyPackaging = true } }
+}
+dependencies { implementation 'dev.ffmpegkit-maintained:ffmpeg-kit-full-gpl:8.1.9'; implementation 'com.alphacephei:vosk-android:0.3.75' }
+
+def modelUrl = 'https://alphacephei.com/vosk/models/vosk-model-small-ja-0.22.zip'
+def modelHash = 'efa092d280153a77615e9e0c7d7283e93e600de3d19d3bec686c57ef19d52eac'
+def localModel = providers.gradleProperty('komaSpeechModel').map { rootProject.file(it) }
+def speechAssets = layout.buildDirectory.dir('generated/speechAssets')
+def speechModel = speechAssets.map { it.file('speech/ja-small.zip') }
+
+def prepareSpeechModel = tasks.register('prepareJapaneseSpeechModel') {
+    inputs.property('url', modelUrl)
+    inputs.property('sha256', modelHash)
+    if (localModel.isPresent()) inputs.file(localModel)
+    outputs.file(speechModel)
+
+    doLast {
+        File target = speechModel.get().asFile
+        Files.createDirectories(target.parentFile.toPath())
+        File temporary = File.createTempFile('ja-small-', '.zip', target.parentFile)
+        try {
+            if (localModel.isPresent()) {
+                Files.copy(localModel.get().toPath(), temporary.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            } else {
+                def connection = URI.create(modelUrl).toURL().openConnection()
+                connection.connectTimeout = 15_000
+                connection.readTimeout = 60_000
+                connection.inputStream.withCloseable { source ->
+                    temporary.withOutputStream { destination -> source.transferTo(destination) }
+                }
+            }
+            def digest = MessageDigest.getInstance('SHA-256')
+            temporary.withInputStream { input ->
+                byte[] buffer = new byte[65536]
+                int count
+                while ((count = input.read(buffer)) != -1) digest.update(buffer, 0, count)
+            }
+            if (digest.digest().encodeHex().toString() != modelHash) {
+                throw new GradleException('Japanese speech model SHA-256 mismatch')
+            }
+            Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temporary.toPath())
+        }
+    }
+}
+android.sourceSets.main.assets.srcDir(speechAssets)
+tasks.matching { it.name == 'preBuild' }.configureEach { dependsOn(prepareSpeechModel) }
