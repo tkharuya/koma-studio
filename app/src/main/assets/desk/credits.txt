@@ -1,0 +1,17 @@
+Koma Studio 1.0.0 · GPL-3.0
+FFmpegKit maintained 8.1.9: https://github.com/ffmpegkit-maintained/ffmpeg
+https://github.com/arthenica/ffmpeg-kit
+https://ffmpeg.org/
+https://www.videolan.org/developers/x264.html
+https://www.videolan.org/developers/x265.html
+Bundled ABI builds: arm64-v8a and x86_64. Their license texts are included in assets/licenses.
+
+Sample photographs used with credit under CC BY-SA 4.0.
+Creator: Alpsdake. Resized and reframed for the sample project. Adapted sample images remain CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:Mount_Fuji_and_Sunrise_from_Lake_Motosu.jpg
+https://commons.wikimedia.org/wiki/File:Mount_Fuji_from_Lake_Motosu.jpg
+https://creativecommons.org/licenses/by-sa/4.0/
+Offline Japanese captions use Vosk 0.3.75 (Apache License 2.0), native JNA 5.18.1 (Apache License 2.0 or LGPL 2.1+) and vosk-model-small-ja-0.22 (Apache License 2.0).
+https://alphacephei.com/vosk/models
+https://alphacephei.com/vosk/models/vosk-model-small-ja-0.22.zip
+Model SHA-256: efa092d280153a77615e9e0c7d7283e93e600de3d19d3bec686c57ef19d52eac
